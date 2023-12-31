@@ -1,0 +1,325 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2759
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;\f1\fmodern\fcharset0 CourierNewPSMT;}
+{\colortbl;\red255\green255\blue255;\red33\green253\blue6;\red255\green255\blue255;\red0\green0\blue0;
+\red255\green255\blue255;\red33\green251\blue6;}
+{\*\expandedcolortbl;;\cssrgb\c0\c97144\c0;\cssrgb\c100000\c100000\c100000\c0;\cssrgb\c0\c0\c0;
+\cssrgb\c100000\c100000\c100000;\cssrgb\c0\c96611\c0;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww19160\viewh13940\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\fs26 \cf2 \cb3 \CocoaLigature0 1  vi /etc/hostname\
+    2  mkdir /opt/scripts\
+    3  cd /opt/scripts\
+    4  clear\
+    5  vim 1_loops.sh\
+    6  vi 1_loops.sh\
+    7  chmod +x 1_loops.sh\
+    8  ./1_loops.sh\
+    9  mv 1_loops.sh 2_loops.sh\
+   10  vi 2_loops.sh\
+   11  chmod +x 2_loops.sh\
+   12  ./2_loops.sh\
+   13  vi 2_loops.sh\
+   14  ./2_loops.sh\
+   15  clear\
+   16  vi 3_whileloop.sh\
+   17  chmod +x 3_whileloop.sh\
+   18  ./3_whileloop.sh\
+   19  vi 3_whileloop.sh\
+   20  ./3_whileloop.sh\
+   21  logout\
+   22  vi /etc/hosts\
+   23  ping web01\
+   24  ping -4 web02\
+   25  ping -c 4 web03\
+   26  ssh vagrant web01\
+   27  ssh vagrant@web01\
+   28  ssh vagrant@web02\
+   29  ssh vagrant@web03\
+   30  ssh vagrant@web02\
+   31  vi /etc/hosts\
+   32  ssh vagrant@web03\
+   33  cat ~/.ssh/id_rsa.pub\
+   34  cat /home/vagrant/.ssh/id_rsa.pub\
+   35  ssh-keygen -t rsa -b 2048 -C "vagrant@web03"\
+   36  ssh vagrant@web03\
+   37  logout\
+   38  ssh vagrant@web03\
+   39  [vagrant@scriptbox ~]$ sudo -i\
+   40  [root@scriptbox ~]# ssh vagrant@web03\
+   41  Permission denied (publickey).\
+   42  [root@scriptbox ~]# \
+   43  # On scriptbox\
+   44  cat ~/.ssh/id_rsa.pub\
+   45  logout\
+   46  ssh -i /path/to/private_key vagrant@web03\
+   47  logout\
+   48  ssh vagrant@web03\
+   49  ssh devops@web01\
+   50  ssh-keygen                // generates a key pair for login\
+   51  ssh-copy-id devops@web01. // copies the ssh key into the remote virtual machine\
+   52  ssh-copy-id devops@web02\
+   53  ssh-copy-id devops@web03\
+   54  pwd\
+   55  ls -a\
+   56  ls .ssh\
+   57  ssh -i .ssh/id_rsa devops@web01 uptime. // once ssh key is installed, this is how the terminal adds the rsa to commands\
+cat .ssh/id_rsa.        // to read the content of the private key\
+cat .ssh/id_rsa.pub     // to read the content of the public key\
+\
+/// CREATING A MULTI OS Script to install packages remotely in different virtual machines\
+\
+FOR THIS TO WORK, IT IS NECESSARY TO HAVE THE ACCESS TO THE VMs VIA SSH. \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1\fs28 \cf4 \cb5 #!/bin/bash\
+\
+# Variable Declaration\
+# PACKAGE="httpd wget unzip"  # Corrected variable assignment\
+URL='https://www.tooplate.com/zip-templates/2098_health.zip'\
+ART_NAME='2098_health'\
+TEMPDIR="/tmp/webfiles"\
+\
+yum --help &> /dev/null\
+\
+if [ $? -eq 0 ]; then\
+   # Set variables for CentOS\
+   PACKAGES="httpd wget unzip"  # Corrected variable name\
+   SVC="httpd"\
+   echo "Running setup on CentOS"\
+\
+   # Installing Dependencies\
+   echo "###########################"\
+   echo "Installing Packages"\
+   echo "##########################"\
+   sudo yum install $PACKAGES -y > /dev/null\
+   echo\
+\
+   # Start Services\
+   echo "###########################"\
+   echo "Start and Enable Services"\
+   echo "##########################"\
+   sudo systemctl start $SVC\
+   sudo systemctl enable $SVC\
+   echo\
+\
+   # Creating Temp Directory\
+   echo "###########################"\
+   echo "Creating Temp Directory"\
+   echo "##########################"\
+   mkdir -p $TEMPDIR\
+   cd $TEMPDIR\
+   echo\
+\
+   wget $URL > /dev/null\
+   unzip $ART_NAME.zip > /dev/null\
+   sudo cp -r $ART_NAME/* /var/www/html\
+   echo\
+\
+   # Bounce Service\
+   echo "###########################"\
+   echo "Restarting HTTPD service"\
+   echo "##########################"\
+   sudo systemctl restart $SVC\
+   echo\
+\
+   # Clean up\
+   echo "###########################"\
+   echo "Removing Temporary Files"\
+   echo "##########################"\
+   rm -rf $TEMPDIR\
+   echo\
+\
+   sudo systemctl status $SVC\
+   ls /var/www/html\
+else\
+   # Set variables for Ubuntu\
+   PACKAGES="apache2 wget unzip"  # Corrected variable name\
+   SVC="apache2"\
+   echo "Running setup on Ubuntu"\
+\
+   # Installing Dependencies\
+   echo "###########################"\
+   echo "Installing Packages"\
+   echo "##########################"\
+   sudo apt update\
+   sudo apt install $PACKAGES -y > /dev/null\
+   echo\
+\
+   # Start Services\
+   echo "###########################"\
+   echo "Start and Enable Services"\
+   echo "##########################"\
+   sudo systemctl start $SVC\
+   sudo systemctl enable $SVC\
+   echo\
+\
+   # Creating Temp Directory\
+   echo "###########################"\
+   echo "Creating Temp Directory"\
+   echo "##########################"\
+   mkdir -p $TEMPDIR\
+   cd $TEMPDIR\
+   echo\
+\
+   wget $URL > /dev/null\
+   unzip $ART_NAME.zip > /dev/null\
+   sudo cp -r $ART_NAME/* /var/www/html\
+   echo\
+\
+   # Bounce Service\
+   echo "###########################"\
+   echo "Restarting HTTPD service"\
+   echo "##########################"\
+   sudo systemctl restart $SVC\
+   echo\
+\
+   # Clean up\
+   echo "###########################"\
+   echo "Removing Temporary Files"\
+   echo "##########################"\
+   rm -rf $TEMPDIR\
+   echo\
+\
+   sudo systemctl status $SVC\
+   ls /var/www/html\
+fi
+\f0\fs26 \cf2 \cb3 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf2 \
+\
+// STEP 2 is to create a script to push this script into remote vis\
+// this script will push the above script into the remote vis\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1\fs28 \cf4 #!/bin/bash\
+\
+USR='devops'\
+for host in $(cat remhosts)\
+do\
+   echo "#############################"\
+   echo "Connecting to $host"\
+   echo "Pushing the script to $host"\
+   scp multios_websetup.sh $USR@$host:/tmp/\
+   echo "Executing the script in $host"\
+   ssh $USR@$host sudo /tmp/multios_websetup.sh\
+   ssh $USR@$host sudo rm -rf /tmp/multios_websetup.sh\
+   echo "##############################"\
+   echo\
+done
+\f0\fs26 \cf6 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf6 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1\fs28 \cf4 10  vi 2_loops.sh\
+   11  chmod +x 2_loops.sh\
+   12  ./2_loops.sh\
+   13  vi 2_loops.sh\
+   14  ./2_loops.sh\
+   15  clear\
+   16  vi 3_whileloop.sh\
+   17  chmod +x 3_whileloop.sh\
+   18  ./3_whileloop.sh\
+   19  vi 3_whileloop.sh\
+    1  vi /etc/hostname\
+   20  ./3_whileloop.sh\
+   21  logout\
+   22  vi /etc/hosts\
+   23  ping web01\
+   24  ping -4 web02\
+   25  ping -c 4 web03\
+   26  ssh vagrant web01\
+   27  ssh vagrant@web01\
+   28  ssh vagrant@web02\
+   29  ssh vagrant@web03\
+    2  mkdir /opt/scripts\
+   30  ssh vagrant@web02\
+   31  vi /etc/hosts\
+   32  ssh vagrant@web03\
+   33  cat ~/.ssh/id_rsa.pub\
+   34  cat /home/vagrant/.ssh/id_rsa.pub\
+   35  ssh-keygen -t rsa -b 2048 -C "vagrant@web03"\
+   36  ssh vagrant@web03\
+   37  logout\
+   38  ssh vagrant@web03\
+   39  [vagrant@scriptbox ~]$ sudo -i\
+    3  cd /opt/scripts\
+   40  [root@scriptbox ~]# ssh vagrant@web03\
+   41  Permission denied (publickey).\
+   42  [root@scriptbox ~]# \
+   43  # On scriptbox\
+   44  cat ~/.ssh/id_rsa.pub\
+   45  logout\
+   46  ssh -i /path/to/private_key vagrant@web03\
+   47  logout\
+   48  cd /opt/scripts\
+   49  ls\
+    4  clear\
+   50  mv remote_websetup remote_websetup.sh\
+   51  ls\
+   52  cat remote_websetup.sh\
+   53  mv remote_websetup.sh remote_websetup\
+   54  cd remote_websetup\
+   55  ls\
+   56  mv multios_websetup multios_websetup.sh\
+   57  cat multios_websetup.sh\
+   58  vim multios_websetup.sh\
+   59  vi multios_websetup.sh\
+    5  vim 1_loops.sh\
+   60  clear\
+   61  cat multios_websetup.sh\
+   62  chmod +x multios_websetup.sh\
+   63  ./multios_websetup.sh\
+   64  vi multios_websetup.sh\
+   65  ./multios_websetup.sh\
+   66  ls /var/www/httpd\
+   67  vi multios_websetup.sh\
+   68  ./multios_websetup.sh\
+   69  vi multios_websetup.sh\
+    6  vi 1_loops.sh\
+   70  ./multios_websetup.sh\
+   71  vi multios_websetup.sh\
+   72  ./multios_websetup.sh\
+   73  vi multios_websetup.sh\
+   74  ./multios_websetup.sh\
+   75  vi multios_websetup.sh\
+   76  ./multios_websetup.sh\
+   77  echo "testfile.txt" > testfile.txt\
+   78  ls\
+   79  scp testfile.txt devops@web01:/temp/\
+    7  chmod +x 1_loops.sh\
+   80  vi webdeploy.sh\
+   81  chmod +x webdeploy.sh\
+    8  ./1_loops.sh\
+   82  ./webdeploy.sh\
+   83  vi webdeploy.sh\
+   84  ls\
+   85  vi webdeploy.sh\
+   86  ./webdeploy.sh\
+   87  cat remhosts\
+   88  ip addr show\
+   89  ls\
+   90  cat multios_websetup\
+   91  cat multios_websetup.sh\
+   92  cat webdeploy.sh\
+   93  ls\
+   94  history\
+   95  history | uniq > commands.txt\
+   96  cat commands.txt\
+   97  history | sort -u > commands.txt\
+    9  mv 1_loops.sh 2_loops.sh
+\f0\fs26 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf2 \
+\
+\
+\
+\
+\
+\
+\
+}
